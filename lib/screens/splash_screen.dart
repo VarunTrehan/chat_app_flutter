@@ -1,3 +1,4 @@
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 import 'package:chat_app_flutter/screens/auth/login_screen.dart';
 import 'package:chat_app_flutter/screens/home/home_screen.dart';
 import 'package:chat_app_flutter/services/auth_services.dart';
@@ -172,7 +173,7 @@ class _SplashScreenState extends State<SplashScreen>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    "Connect, Chat & Call",
+                    context.tr('connect_chat_call'),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white.withOpacity(0.9),

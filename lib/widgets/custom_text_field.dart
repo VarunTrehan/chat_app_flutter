@@ -1,3 +1,5 @@
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
+import 'package:chat_app_flutter/core/theme/app_theme.dart';
 import 'package:chat_app_flutter/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -62,7 +64,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppConstants.textPrimaryColor,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           SizedBox(height: 8),
@@ -81,11 +83,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
           textCapitalization: widget.textCapitalization,
           inputFormatters: widget.inputFormatter,
           focusNode: widget.focusNode,
-          style: TextStyle(fontSize: 16, color: AppConstants.textPrimaryColor),
+          style: TextStyle(
+            fontSize: 16,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: TextStyle(
-              color: AppConstants.textSecondaryColor.withOpacity(0.6),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               fontSize: 16,
             ),
             errorText: widget.errorText,
@@ -93,12 +98,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 ? Icon(
                     widget.prefixIcon,
                     size: 22,
-                    color: AppConstants.textSecondaryColor,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   )
                 : null,
             suffixIcon: _buildSuffixIcon(),
             filled: true,
-            fillColor: Colors.grey.shade100,
+            fillColor: Theme.of(context).inputDecorationTheme.fillColor,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(
                 AppConstants.borderRadiusMedium,
@@ -109,14 +114,17 @@ class _CustomTextFieldState extends State<CustomTextField> {
               borderRadius: BorderRadius.circular(
                 AppConstants.borderRadiusMedium,
               ),
-              borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+              borderSide: BorderSide(
+                color: Theme.of(context).dividerColor,
+                width: 1,
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(
                 AppConstants.borderRadiusMedium,
               ),
               borderSide: BorderSide(
-                color: AppConstants.primaryColor,
+                color: AppColors.primary,
                 width: 2,
               ),
             ),
@@ -124,13 +132,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
               borderRadius: BorderRadius.circular(
                 AppConstants.borderRadiusMedium,
               ),
-              borderSide: BorderSide(color: AppConstants.accentColor, width: 1),
+              borderSide: BorderSide(color: AppColors.accent, width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(
                 AppConstants.borderRadiusMedium,
               ),
-              borderSide: BorderSide(color: AppConstants.accentColor, width: 2),
+              borderSide: BorderSide(color: AppColors.accent, width: 2),
             ),
             contentPadding: EdgeInsets.symmetric(
               horizontal: AppConstants.paddingMedium,
@@ -153,7 +161,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         },
         icon: Icon(
           _isObsecureText ? Icons.visibility_off : Icons.visibility,
-          color: AppConstants.textSecondaryColor,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       );
     }
@@ -161,7 +169,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
     if (widget.suffixIcon != null) {
       return IconButton(
         onPressed: widget.onSuffixIconPressed,
-        icon: Icon(widget.suffixIcon, color: AppConstants.textSecondaryColor),
+        icon: Icon(
+          widget.suffixIcon,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
       );
     }
     return null;
@@ -190,13 +201,16 @@ class SearchTextField extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
-      style: TextStyle(fontSize: 16, color: AppConstants.textPrimaryColor),
+      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: TextStyle(
-          color: AppConstants.textSecondaryColor.withOpacity(0.6),
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
-        prefixIcon: Icon(Icons.search, color: AppConstants.textSecondaryColor),
+        prefixIcon: Icon(
+          Icons.search,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
         suffixIcon: controller.text.isNotEmpty
             ? IconButton(
                 onPressed: () {
@@ -204,23 +218,26 @@ class SearchTextField extends StatelessWidget {
                   if (onClear != null) onClear!();
                   if (onChanged != null) onChanged!('');
                 },
-                icon: Icon(Icons.clear, color: AppConstants.textSecondaryColor),
+                icon: Icon(
+                  Icons.clear,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               )
             : null,
 
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: Theme.of(context).inputDecorationTheme.fillColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
-          borderSide: BorderSide(color: Colors.grey.shade300, width: 1),
+          borderSide: BorderSide(color: Theme.of(context).dividerColor, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
-          borderSide: BorderSide(color: AppConstants.primaryColor, width: 2),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
         contentPadding: EdgeInsets.symmetric(
           horizontal: AppConstants.paddingMedium,
@@ -232,49 +249,62 @@ class SearchTextField extends StatelessWidget {
 }
 
 class TextFieldValidators {
-  static String? email(String? value) {
+  static String? email(BuildContext context, String? value) {
     if (value == null || value.isEmpty) {
-      return 'Email is required';
+      return context.tr('email_required');
     }
     return null;
   }
 
-  static String? password(String? value) {
+  static String? password(BuildContext context, String? value) {
     if (value == null || value.isEmpty) {
-      return "Password is required";
+      return context.tr('password_required');
     }
     if (value.length < AppConstants.minPasswordLength) {
-      return AppConstants.passwordShortMessage;
+      return context
+          .tr('password_short')
+          .replaceFirst('{min}', AppConstants.minPasswordLength.toString());
     }
     return null;
   }
 
-  static String? required(String? value, {String? fieldName}) {
+  static String? required(
+    BuildContext context,
+    String? value, {
+    String? fieldName,
+  }) {
     if (value == null || value.trim().isEmpty) {
-      return '${fieldName ?? 'This field'} is required';
+      final field = fieldName ?? context.tr('this_field');
+      return context.tr('field_required').replaceFirst('{field}', field);
     }
     return null;
   }
 
-  static String? name(String? value) {
+  static String? name(BuildContext context, String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Name is required';
+      return context.tr('name_required');
     }
     if (value.trim().length < 2) {
-      return "Name must be atleast 2 characters";
+      return context.tr('name_min_length');
     }
     if (value.trim().length > AppConstants.maxNameLength) {
-      return "Name must be less than ${AppConstants.maxNameLength} characters";
+      return context.tr(
+        'name_max_length',
+      ).replaceFirst('{max}', AppConstants.maxNameLength.toString());
     }
     return null;
   }
 
-  static String? confirmPassword(String? value, String password) {
+  static String? confirmPassword(
+    BuildContext context,
+    String? value,
+    String password,
+  ) {
     if (value == null || value.isEmpty) {
-      return 'Please confirm your password';
+      return context.tr('confirm_password_required');
     }
     if (value != password) {
-      return 'Password do not match';
+      return context.tr('passwords_do_not_match');
     }
     return null;
   }

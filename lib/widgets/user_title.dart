@@ -1,3 +1,4 @@
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_flutter/models/user_model.dart';
 import 'package:chat_app_flutter/utils/constants.dart';
@@ -49,7 +50,7 @@ class UserTitle extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        subtitle: _buildSubtitle(),
+        subtitle: _buildSubtitle(context),
         trailing:
             trailing ??
             Icon(Icons.chevron_right, color: AppConstants.textSecondaryColor),
@@ -96,7 +97,7 @@ class UserTitle extends StatelessWidget {
     );
   }
 
-  Widget? _buildSubtitle() {
+  Widget? _buildSubtitle(BuildContext context) {
     if (user.bio != null && user.bio!.isNotEmpty) {
       return Text(
         user.bio!,
@@ -108,14 +109,14 @@ class UserTitle extends StatelessWidget {
 
     if (showLastSeen && !user.isOnline && user.lastSeen != null) {
       return Text(
-        'Last seen: ${AppConstants().formatTimestamp(user.lastSeen!)}',
+        '${context.tr('last_seen')}: ${AppConstants().formatTimestamp(user.lastSeen!)}',
         style: TextStyle(fontSize: 12, color: AppConstants.textSecondaryColor),
       );
     }
 
     if (user.isOnline) {
       return Text(
-        'Online',
+        context.tr('online'),
         style: TextStyle(
           color: Colors.green,
           fontSize: 12,
@@ -138,7 +139,7 @@ class EmptyUserList extends StatelessWidget {
   final IconData icon;
   const EmptyUserList({
     super.key,
-    this.message = 'No user found',
+    this.message = '',
     this.icon = Icons.people_outline,
   });
 
@@ -155,7 +156,7 @@ class EmptyUserList extends StatelessWidget {
           ),
           SizedBox(height: 16),
           Text(
-            message,
+            message.isNotEmpty ? message : context.tr('no_users_found'),
             style: TextStyle(
               fontSize: 16,
               color: AppConstants.textSecondaryColor.withOpacity(0.7),

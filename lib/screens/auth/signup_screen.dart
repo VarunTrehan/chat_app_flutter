@@ -1,5 +1,5 @@
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 import 'package:chat_app_flutter/screens/auth/login_screen.dart';
-import 'package:chat_app_flutter/screens/auth/signup_screen.dart';
 import 'package:chat_app_flutter/screens/home/home_screen.dart';
 import 'package:chat_app_flutter/services/auth_services.dart';
 import 'package:chat_app_flutter/utils/constants.dart';
@@ -133,7 +133,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     SizedBox(height: 24),
                     Text(
-                      "Create Account",
+                      context.tr('create_account'),
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -142,7 +142,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      "Sign up to get started",
+                      context.tr('sign_up_to_get_started'),
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
@@ -168,42 +168,46 @@ class _SignupScreenState extends State<SignupScreen> {
                         children: [
                           CustomTextField(
                             controller: _nameController,
-                            hintText: 'Name',
+                            hintText: context.tr('name'),
                             prefixIcon: Icons.person_outline,
                             textCapitalization: TextCapitalization.words,
-                            validator: TextFieldValidators.name,
+                            validator: (value) =>
+                                TextFieldValidators.name(context, value),
                           ),
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _emailController,
-                            hintText: 'Email',
+                            hintText: context.tr('email'),
                             prefixIcon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
-                            validator: TextFieldValidators.email,
+                            validator: (value) =>
+                                TextFieldValidators.email(context, value),
                           ),
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _passwordController,
-                            hintText: 'Password',
+                            hintText: context.tr('password'),
                             prefixIcon: Icons.lock_outlined,
                             isPassword: true,
-                            validator: TextFieldValidators.password,
+                            validator: (value) =>
+                                TextFieldValidators.password(context, value),
                           ),
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _confirmpasswordController,
-                            hintText: 'Confirm Password',
+                            hintText: context.tr('confirm_password'),
                             prefixIcon: Icons.lock_outlined,
                             isPassword: true,
                             validator: (value) =>
                                 TextFieldValidators.confirmPassword(
+                                  context,
                                   value,
                                   _passwordController.text,
                                 ),
                           ),
                           SizedBox(height: 24),
                           CustomButton(
-                            text: "Sign Up",
+                            text: context.tr('sign_up'),
                             onPressed: _signUp,
                             isLoading: _isLoading,
                           ),
@@ -212,13 +216,13 @@ class _SignupScreenState extends State<SignupScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "Already have an account",
+                                context.tr('already_have_account'),
                                 style: TextStyle(
                                   color: AppConstants.textSecondaryColor,
                                 ),
                               ),
                               CustomTextButton(
-                                text: "Log in",
+                                text: context.tr('log_in'),
                                 onPressed: _navigateToLogin,
                               ),
                             ],
@@ -232,7 +236,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         horizontal: AppConstants.paddingMedium,
                       ),
                       child: Text(
-                        "By signing up, you agree to our Terms of Service and Privacy Policy",
+                        context.tr('terms_and_privacy'),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.white.withOpacity(0.8),

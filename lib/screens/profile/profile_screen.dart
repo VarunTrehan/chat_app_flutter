@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
+import 'package:chat_app_flutter/core/providers/language_provider.dart';
+import 'package:chat_app_flutter/core/providers/theme_provider.dart';
 import 'package:chat_app_flutter/models/user_model.dart';
 import 'package:chat_app_flutter/services/auth_services.dart';
 import 'package:chat_app_flutter/utils/constants.dart';
@@ -9,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:chat_app_flutter/widgets/custom_buttons.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -113,6 +117,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppConstants.accentColor,
       );
     }
+    return null;
   }
 
   Future<void> _updateProfile() async {
@@ -178,7 +183,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_isLoading && _currentUser == null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text("Profile"),
+          title: Text(context.tr('profile')),
           backgroundColor: AppConstants.primaryColor,
         ),
         body: Center(
@@ -189,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Profile',
+          context.tr('profile'),
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: AppConstants.primaryColor,
@@ -208,7 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _currentUser == null
-          ? Center(child: Text('User Not Found'))
+          ? Center(child: Text(context.tr('user_not_found')))
           : SingleChildScrollView(
               child: Column(
                 children: [
@@ -231,7 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (_isEditMode) ...[
                           SizedBox(height: 12),
                           CusomSmallButtom(
-                            text: 'Change Photo',
+                            text: context.tr('change_photo'),
                             onPressed: _pickImage,
                             icon: Icons.camera_alt,
                             backgroundColor: Colors.white.withOpacity(0.3),
@@ -249,17 +254,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           CustomTextField(
                             controller: _nameController,
-                            labelText: 'Name',
-                            hintText: "Enter Your Name",
+                            labelText: context.tr('name'),
+                            hintText: context.tr('enter_your_name'),
                             prefixIcon: Icons.person,
                             readOnly: !_isEditMode,
-                            validator: TextFieldValidators.name,
+                            validator: (value) =>
+                                TextFieldValidators.name(context, value),
                           ),
                           SizedBox(height: 20),
                           CustomTextField(
                             controller: _bioController,
-                            labelText: 'Bio',
-                            hintText: "Tell use about yourself",
+                            labelText: context.tr('bio'),
+                            hintText: context.tr('tell_us_about_yourself'),
                             prefixIcon: Icons.info_outline,
                             readOnly: !_isEditMode,
                             maxlines: 3,
@@ -270,8 +276,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: TextEditingController(
                               text: _currentUser!.email,
                             ),
-                            labelText: 'Email',
-                            hintText: "Email",
+                            labelText: context.tr('email'),
+                            hintText: context.tr('email'),
                             prefixIcon: Icons.email,
                             readOnly: true,
                             enabled: false,
@@ -279,15 +285,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SizedBox(height: 20),
                           _buildInfoCard(),
                           SizedBox(height: 24),
+                          _buildPreferencesCard(),
+                          SizedBox(height: 24),
                           if (_isEditMode) ...[
                             CustomButton(
-                              text: 'Save Changes',
+                              text: context.tr('save_changes'),
                               onPressed: _updateProfile,
                               isLoading: _isLoading,
                             ),
                             SizedBox(height: 12),
                             CustomButton(
-                              text: "Cancel",
+                              text: context.tr('cancel'),
                               onPressed: _cancelEdit,
                               isOutlined: true,
                             ),
@@ -367,7 +375,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Account Information",
+            context.tr('account_information'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -377,14 +385,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: 12),
           _buildInfoRow(
             Icons.calendar_today,
-            'Joined',
+            context.tr('joined'),
             _formatDate(_currentUser!.createdAt),
           ),
           Divider(height: 24),
           _buildInfoRow(
             Icons.verified_user,
-            'User ID',
+            context.tr('user_id'),
             _currentUser!.uid.substring(0, 12) + '...',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferencesCard() {
+    final themeProvider = context.watch<ThemeProvider>();
+    final languageProvider = context.watch<LanguageProvider>();
+
+    return Container(
+      padding: EdgeInsets.all(AppConstants.paddingMedium),
+      decoration: BoxDecoration(
+        color: AppConstants.backgroundColor,
+        borderRadius: BorderRadius.circular(AppConstants.borderRadiusMedium),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.tr('theme'),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(context.tr('dark_mode')),
+            value: themeProvider.isDarkMode,
+            onChanged: (_) => themeProvider.toggleTheme(),
+          ),
+          SizedBox(height: 12),
+          Text(
+            context.tr('language'),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            initialValue: languageProvider.locale.languageCode,
+            items: [
+              DropdownMenuItem(
+                value: 'en',
+                child: Text(context.tr('english')),
+              ),
+              DropdownMenuItem(value: 'hi', child: Text(context.tr('hindi'))),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                languageProvider.changeLanguage(value);
+              }
+            },
           ),
         ],
       ),

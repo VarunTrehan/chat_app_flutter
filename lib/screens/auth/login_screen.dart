@@ -1,3 +1,4 @@
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 import 'package:chat_app_flutter/screens/auth/signup_screen.dart';
 import 'package:chat_app_flutter/screens/home/home_screen.dart';
 import 'package:chat_app_flutter/services/auth_services.dart';
@@ -97,17 +98,17 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Reset Password"),
+        title: Text(context.tr('reset_password')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              "Enter your email address and we\'ll send password reset link",
+              context.tr('reset_password_message'),
             ),
             SizedBox(height: 16),
             CustomTextField(
               controller: emailController,
-              hintText: "Email",
+              hintText: context.tr('email'),
               prefixIcon: Icons.email,
               keyboardType: TextInputType.emailAddress,
             ),
@@ -116,13 +117,13 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
+            child: Text(context.tr('cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
               if (emailController.text.trim().isEmpty) {
                 Fluttertoast.showToast(
-                  msg: "Please enter your email",
+                  msg: context.tr('please_enter_email'),
                   backgroundColor: AppConstants.accentColor,
                 );
                 return;
@@ -131,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 await _authServices.resetPassword(emailController.text.trim());
                 Navigator.pop(context);
                 Fluttertoast.showToast(
-                  msg: "Password reset email sent!",
+                  msg: context.tr('password_reset_sent'),
                   backgroundColor: AppConstants.secondaryColor,
                 );
               } catch (e) {
@@ -141,7 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 );
               }
             },
-            child: Text("Send"),
+            child: Text(context.tr('send')),
           ),
         ],
       ),
@@ -184,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 24),
                     Text(
-                      "Welcome Back!",
+                      context.tr('welcome_back'),
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -193,7 +194,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      "Sign in to continue",
+                      context.tr('sign_in_to_continue'),
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
@@ -219,30 +220,32 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           CustomTextField(
                             controller: _emailController,
-                            hintText: 'Email',
+                            hintText: context.tr('email'),
                             prefixIcon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
-                            validator: TextFieldValidators.email,
+                            validator: (value) =>
+                                TextFieldValidators.email(context, value),
                           ),
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _passwordController,
-                            hintText: 'Password',
+                            hintText: context.tr('password'),
                             prefixIcon: Icons.lock_outlined,
                             isPassword: true,
-                            validator: TextFieldValidators.password,
+                            validator: (value) =>
+                                TextFieldValidators.password(context, value),
                           ),
                           SizedBox(height: 8),
                           Align(
                             alignment: Alignment.centerRight,
                             child: CustomTextButton(
-                              text: "Forgot Password?",
+                              text: context.tr('forgot_password'),
                               onPressed: _showForgotPasswordDialog,
                             ),
                           ),
                           SizedBox(height: 24),
                           CustomButton(
-                            text: "login",
+                            text: context.tr('login'),
                             onPressed: _login,
                             isLoading: _isLoading,
                           ),
@@ -251,13 +254,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "Don\'t have an account",
+                                context.tr('dont_have_account'),
                                 style: TextStyle(
                                   color: AppConstants.textSecondaryColor,
                                 ),
                               ),
                               CustomTextButton(
-                                text: "Sign Up",
+                                text: context.tr('sign_up'),
                                 onPressed: _navigateToSignUp,
                               ),
                             ],

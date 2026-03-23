@@ -1,3 +1,4 @@
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 import 'package:chat_app_flutter/models/user_model.dart';
 import 'package:chat_app_flutter/screens/auth/login_screen.dart';
 import 'package:chat_app_flutter/screens/profile/profile_screen.dart';
@@ -6,10 +7,8 @@ import 'package:chat_app_flutter/utils/constants.dart';
 import 'package:chat_app_flutter/widgets/custom_text_field.dart';
 import 'package:chat_app_flutter/widgets/user_title.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get_navigation/src/snackbar/snackbar.dart';
 import 'package:zego_uikit/zego_uikit.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
@@ -47,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifeCycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     final userId = _authServices.currentUserId;
     if (userId != null) {
@@ -78,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               elevation: 0,
               backgroundColor: AppConstants.primaryColor,
               title: Text(
-                _currentIndex == 0 ? 'Users' : 'Chats',
+                _currentIndex == 0 ? context.tr('users') : context.tr('chats'),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -115,9 +114,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               items: [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.people),
-                  label: 'Users',
+                  label: context.tr('users'),
                 ),
-                BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Chats'),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.chat),
+                  label: context.tr('chats'),
+                ),
               ],
             ),
           ),
@@ -135,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           color: AppConstants.primaryColor,
           child: SearchTextField(
             controller: _searchController,
-            hintText: 'Search users....',
+            hintText: context.tr('search_users'),
             onChanged: (value) {
               setState(() {
                 _searchQuery = value.toLowerCase();
@@ -165,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return EmptyUserList(
-                  message: 'No Users Found',
+                  message: context.tr('no_users_found'),
                   icon: Icons.people_outline,
                 );
               }
@@ -181,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
               if (users.isEmpty) {
                 return EmptyUserList(
-                  message: 'No Users Match your Search',
+                  message: context.tr('no_users_match_search'),
                   icon: Icons.search_off,
                 );
               }
@@ -279,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (userIDs.isNotEmpty) {
         userIDs = userIDs.substring(0, userIDs.length - 1);
       }
-      var message = 'Users does not exist or offline';
+      var message = context.tr('users_offline_or_missing');
 
       if (code.isNotEmpty) {
         message += ', code: $code, message: $message';
@@ -300,14 +302,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Logout"),
-        content: Text("Are you sure you want to logout?"),
+        title: Text(context.tr('logout')),
+        content: Text(context.tr('logout_confirm')),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: Text("Cancel"),
+            child: Text(context.tr('cancel')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -317,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.pop(context);
               await _logout(context);
             },
-            child: Text("Logout"),
+            child: Text(context.tr('logout')),
           ),
         ],
       ),
@@ -343,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } catch (e) {
       Navigator.pop(context);
       Fluttertoast.showToast(
-        msg: 'Error logging Out: $e',
+        msg: '${context.tr('error_logging_out')}: $e',
         backgroundColor: AppConstants.accentColor,
       );
     }
