@@ -160,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    AppConstants.appName,
+                    context.trSafe('app_title'),
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -173,7 +173,7 @@ class _SplashScreenState extends State<SplashScreen>
                 FadeTransition(
                   opacity: _fadeAnimation,
                   child: Text(
-                    context.tr('connect_chat_call'),
+                    context.trSafe('splash_subtitle_connect_chat_call'),
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.white.withOpacity(0.9),

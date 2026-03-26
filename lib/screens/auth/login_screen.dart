@@ -60,7 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
 
         Fluttertoast.showToast(
-          msg: AppConstants.loginSuccessMessage,
+          msg: context.trSafe('auth_toast_login_success'),
           backgroundColor: AppConstants.secondaryColor,
         );
 
@@ -72,7 +72,15 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       Fluttertoast.showToast(
-        msg: e.toString(),
+        msg: (e is AuthError)
+            ? context.trSafe(
+                'auth_error_${e.code}',
+                args: <String, Object>{'error': e.details ?? e.toString()},
+              )
+            : context.trSafe(
+                'auth_error_unexpected_error',
+                args: <String, Object>{'error': e.toString()},
+              ),
         backgroundColor: AppConstants.accentColor,
         toastLength: Toast.LENGTH_LONG,
       );
@@ -98,17 +106,19 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.tr('reset_password')),
+        title: Text(
+          context.trSafe('login_dialog_reset_password_title'),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              context.tr('reset_password_message'),
+              context.trSafe('login_dialog_reset_password_message'),
             ),
             SizedBox(height: 16),
             CustomTextField(
               controller: emailController,
-              hintText: context.tr('email'),
+              hintText: context.trSafe('login_input_email_hint'),
               prefixIcon: Icons.email,
               keyboardType: TextInputType.emailAddress,
             ),
@@ -117,13 +127,15 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(context.tr('cancel')),
+            child: Text(context.trSafe('common_button_cancel')),
           ),
           ElevatedButton(
             onPressed: () async {
               if (emailController.text.trim().isEmpty) {
                 Fluttertoast.showToast(
-                  msg: context.tr('please_enter_email'),
+                  msg: context.trSafe(
+                    'login_dialog_reset_password_please_enter_email',
+                  ),
                   backgroundColor: AppConstants.accentColor,
                 );
                 return;
@@ -132,17 +144,27 @@ class _LoginScreenState extends State<LoginScreen> {
                 await _authServices.resetPassword(emailController.text.trim());
                 Navigator.pop(context);
                 Fluttertoast.showToast(
-                  msg: context.tr('password_reset_sent'),
+                  msg: context.trSafe('login_dialog_reset_password_sent'),
                   backgroundColor: AppConstants.secondaryColor,
                 );
               } catch (e) {
                 Fluttertoast.showToast(
-                  msg: e.toString(),
+                  msg: (e is AuthError)
+                      ? context.trSafe(
+                          'auth_error_${e.code}',
+                          args: <String, Object>{
+                            'error': e.details ?? e.toString(),
+                          },
+                        )
+                      : context.trSafe(
+                          'auth_error_unexpected_error',
+                          args: <String, Object>{'error': e.toString()},
+                        ),
                   backgroundColor: AppConstants.accentColor,
                 );
               }
             },
-            child: Text(context.tr('send')),
+            child: Text(context.trSafe('common_button_send')),
           ),
         ],
       ),
@@ -185,20 +207,26 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 24),
                     Text(
-                      context.tr('welcome_back'),
+                      context.trSafe('login_title_welcome_back'),
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      maxLines: 2,
                     ),
                     SizedBox(height: 8),
                     Text(
-                      context.tr('sign_in_to_continue'),
+                      context.trSafe('login_subtitle_sign_in_to_continue'),
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
                       ),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      maxLines: 3,
                     ),
                     SizedBox(height: 40),
                     Container(
@@ -220,7 +248,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           CustomTextField(
                             controller: _emailController,
-                            hintText: context.tr('email'),
+                            hintText: context.trSafe('login_input_email_hint'),
                             prefixIcon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) =>
@@ -229,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _passwordController,
-                            hintText: context.tr('password'),
+                            hintText: context.trSafe('login_input_password_hint'),
                             prefixIcon: Icons.lock_outlined,
                             isPassword: true,
                             validator: (value) =>
@@ -239,13 +267,15 @@ class _LoginScreenState extends State<LoginScreen> {
                           Align(
                             alignment: Alignment.centerRight,
                             child: CustomTextButton(
-                              text: context.tr('forgot_password'),
+                              text: context.trSafe(
+                                'login_link_forgot_password',
+                              ),
                               onPressed: _showForgotPasswordDialog,
                             ),
                           ),
                           SizedBox(height: 24),
                           CustomButton(
-                            text: context.tr('login'),
+                            text: context.trSafe('login_button_submit'),
                             onPressed: _login,
                             isLoading: _isLoading,
                           ),
@@ -253,14 +283,18 @@ class _LoginScreenState extends State<LoginScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                context.tr('dont_have_account'),
-                                style: TextStyle(
-                                  color: AppConstants.textSecondaryColor,
+                              Flexible(
+                                child: Text(
+                                  context.trSafe('login_link_no_account_prompt'),
+                                  style: TextStyle(
+                                    color: AppConstants.textSecondaryColor,
+                                  ),
+                                  softWrap: true,
+                                  maxLines: 2,
                                 ),
                               ),
                               CustomTextButton(
-                                text: context.tr('sign_up'),
+                                text: context.trSafe('signup_button_submit'),
                                 onPressed: _navigateToSignUp,
                               ),
                             ],

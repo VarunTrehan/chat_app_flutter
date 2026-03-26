@@ -9,10 +9,13 @@ import 'package:chat_app_flutter/widgets/user_title.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 import 'package:zego_uikit/zego_uikit.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
+
+import 'package:chat_app_flutter/core/providers/offline_data_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,7 +37,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     // TODO: implement initState
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadCurrentUser();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadCurrentUser();
+    });
   }
 
   @override
@@ -59,7 +64,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _loadCurrentUser() async {
-    final user = await _authServices.getCurrentUserData();
+    final offlineProvider = context.read<OfflineDataProvider>();
+    final user = await offlineProvider.loadCurrentUser();
     if (mounted) {
       setState(() {
         _currentUser = user;
@@ -77,11 +83,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               elevation: 0,
               backgroundColor: AppConstants.primaryColor,
               title: Text(
-                _currentIndex == 0 ? context.tr('users') : context.tr('chats'),
+                _currentIndex == 0
+                    ? context.trSafe('home_tab_users')
+                    : context.trSafe('home_tab_chats'),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               actions: [
                 if (_currentIndex == 0)
@@ -114,11 +124,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               items: [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.people),
-                  label: context.tr('users'),
+                  label: context.trSafe('home_tab_users'),
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.chat),
-                  label: context.tr('chats'),
+                  label: context.trSafe('home_tab_chats'),
                 ),
               ],
             ),
@@ -130,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildUsersTab() {
+    final offlineProvider = context.watch<OfflineDataProvider>();
     return Column(
       children: [
         Container(
@@ -137,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           color: AppConstants.primaryColor,
           child: SearchTextField(
             controller: _searchController,
-            hintText: context.tr('search_users'),
+            hintText: context.trSafe('home_search_users_hint'),
             onChanged: (value) {
               setState(() {
                 _searchQuery = value.toLowerCase();
@@ -151,23 +162,28 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ),
         Expanded(
-          child: StreamBuilder<List<UserModel>>(
-            stream: _authServices.getAllUsers(),
+          child: !offlineProvider.initialized
+              ? const Center(child: CircularProgressIndicator())
+              : StreamBuilder<List<UserModel>>(
+            stream: offlineProvider.usersStream,
             builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
+              if (snapshot.hasError) {
                 return Center(
-                  child: CircularProgressIndicator(
-                    color: AppConstants.primaryColor,
+                  child: Text(
+                    context.trSafe(
+                      'home_error_users_list',
+                      args: <String, Object>{
+                        'error': snapshot.error.toString(),
+                      },
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 );
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
               }
 
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return EmptyUserList(
-                  message: context.tr('no_users_found'),
+                  message: context.trSafe('home_empty_users_found'),
                   icon: Icons.people_outline,
                 );
               }
@@ -183,7 +199,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
               if (users.isEmpty) {
                 return EmptyUserList(
-                  message: context.tr('no_users_match_search'),
+                  message: context.trSafe(
+                    'home_empty_users_no_match_search',
+                  ),
                   icon: Icons.search_off,
                 );
               }
@@ -230,6 +248,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   void _openChatWithUser(UserModel user) async {
+    if (_currentUser == null) return;
     await ZIMKit()
         .connectUser(id: _currentUser!.uid, name: _currentUser!.name)
         .then((v) {
@@ -281,12 +300,18 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       if (userIDs.isNotEmpty) {
         userIDs = userIDs.substring(0, userIDs.length - 1);
       }
-      var message = context.tr('users_offline_or_missing');
 
-      if (code.isNotEmpty) {
-        message += ', code: $code, message: $message';
-      }
-      Fluttertoast.showToast(msg: message);
+      final toastMessage = code.isNotEmpty
+          ? context.trSafe(
+              'home_error_users_offline_details',
+              args: <String, Object>{
+                'code': code,
+                'details': message,
+              },
+            )
+          : context.trSafe('home_error_users_offline_or_missing');
+
+      Fluttertoast.showToast(msg: toastMessage);
     } else if (code.isNotEmpty) {
       print(message);
     }
@@ -302,14 +327,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.tr('logout')),
-        content: Text(context.tr('logout_confirm')),
+        title: Text(context.trSafe('home_dialog_logout_title')),
+        content: Text(context.trSafe('home_dialog_logout_confirm')),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
             },
-            child: Text(context.tr('cancel')),
+            child: Text(context.trSafe('common_button_cancel')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -319,7 +344,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               Navigator.pop(context);
               await _logout(context);
             },
-            child: Text(context.tr('logout')),
+            child: Text(context.trSafe('common_button_logout')),
           ),
         ],
       ),
@@ -345,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     } catch (e) {
       Navigator.pop(context);
       Fluttertoast.showToast(
-        msg: '${context.tr('error_logging_out')}: $e',
+        msg: "${context.trSafe('home_error_logging_out')}: $e",
         backgroundColor: AppConstants.accentColor,
       );
     }

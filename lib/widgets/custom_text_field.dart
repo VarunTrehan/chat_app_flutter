@@ -181,7 +181,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
 class SearchTextField extends StatelessWidget {
   final TextEditingController controller;
-  final String hintText;
+  final String? hintText;
   final void Function(String)? onChanged;
   final void Function(String)? onSubmitted;
   final VoidCallback? onClear;
@@ -189,7 +189,7 @@ class SearchTextField extends StatelessWidget {
   const SearchTextField({
     super.key,
     required this.controller,
-    this.hintText = 'Search...',
+    this.hintText,
     this.onChanged,
     this.onSubmitted,
     this.onClear,
@@ -203,7 +203,7 @@ class SearchTextField extends StatelessWidget {
       onSubmitted: onSubmitted,
       style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
-        hintText: hintText,
+        hintText: hintText ?? context.trSafe('home_search_users_hint'),
         hintStyle: TextStyle(
           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
         ),
@@ -251,19 +251,22 @@ class SearchTextField extends StatelessWidget {
 class TextFieldValidators {
   static String? email(BuildContext context, String? value) {
     if (value == null || value.isEmpty) {
-      return context.tr('email_required');
+      return context.trSafe('auth_field_email_required');
     }
     return null;
   }
 
   static String? password(BuildContext context, String? value) {
     if (value == null || value.isEmpty) {
-      return context.tr('password_required');
+      return context.trSafe('auth_field_password_required');
     }
     if (value.length < AppConstants.minPasswordLength) {
-      return context
-          .tr('password_short')
-          .replaceFirst('{min}', AppConstants.minPasswordLength.toString());
+      return context.trSafe(
+        'auth_field_password_short',
+        args: <String, Object>{
+          'min': AppConstants.minPasswordLength,
+        },
+      );
     }
     return null;
   }
@@ -274,23 +277,31 @@ class TextFieldValidators {
     String? fieldName,
   }) {
     if (value == null || value.trim().isEmpty) {
-      final field = fieldName ?? context.tr('this_field');
-      return context.tr('field_required').replaceFirst('{field}', field);
+      final field = fieldName ?? context.trSafe('auth_field_this_field');
+      return context.trSafe(
+        'auth_field_required',
+        args: <String, Object>{
+          'field': field,
+        },
+      );
     }
     return null;
   }
 
   static String? name(BuildContext context, String? value) {
     if (value == null || value.trim().isEmpty) {
-      return context.tr('name_required');
+      return context.trSafe('auth_field_name_required');
     }
     if (value.trim().length < 2) {
-      return context.tr('name_min_length');
+      return context.trSafe('auth_field_name_min_length');
     }
     if (value.trim().length > AppConstants.maxNameLength) {
-      return context.tr(
-        'name_max_length',
-      ).replaceFirst('{max}', AppConstants.maxNameLength.toString());
+      return context.trSafe(
+        'auth_field_name_max_length',
+        args: <String, Object>{
+          'max': AppConstants.maxNameLength,
+        },
+      );
     }
     return null;
   }
@@ -301,10 +312,10 @@ class TextFieldValidators {
     String password,
   ) {
     if (value == null || value.isEmpty) {
-      return context.tr('confirm_password_required');
+      return context.trSafe('auth_field_confirm_password_required');
     }
     if (value != password) {
-      return context.tr('passwords_do_not_match');
+      return context.trSafe('auth_field_passwords_do_not_match');
     }
     return null;
   }

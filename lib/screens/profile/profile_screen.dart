@@ -14,6 +14,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:chat_app_flutter/widgets/custom_buttons.dart';
+import 'package:chat_app_flutter/core/providers/offline_data_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -38,7 +39,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    _loadUserData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserData();
+    });
   }
 
   @override
@@ -54,7 +57,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     try {
-      final user = await _authServices.getCurrentUserData();
+      final offlineProvider = context.read<OfflineDataProvider>();
+      final user = await offlineProvider.loadCurrentUser();
       if (user != null && mounted) {
         setState(() {
           _currentUser = user;
@@ -69,7 +73,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
         });
         Fluttertoast.showToast(
-          msg: 'Error loading profile $e',
+          msg: context.trSafe(
+            'profile_toast_error_loading_profile',
+            args: <String, Object>{'error': e.toString()},
+          ),
           backgroundColor: AppConstants.accentColor,
         );
       }
@@ -93,7 +100,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       Fluttertoast.showToast(
-        msg: 'Error loading image: $e',
+        msg: context.trSafe(
+          'profile_toast_error_loading_image',
+          args: <String, Object>{'error': e.toString()},
+        ),
         backgroundColor: AppConstants.accentColor,
       );
     }
@@ -113,7 +123,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return downloadUrl;
     } catch (e) {
       Fluttertoast.showToast(
-        msg: 'Error loading image: $e',
+        msg: context.trSafe(
+          'profile_toast_error_loading_image',
+          args: <String, Object>{'error': e.toString()},
+        ),
         backgroundColor: AppConstants.accentColor,
       );
     }
@@ -141,7 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
 
       Fluttertoast.showToast(
-        msg: 'Profile updated successfully',
+        msg: context.trSafe('profile_toast_profile_updated_success'),
         backgroundColor: AppConstants.secondaryColor,
       );
 
@@ -154,7 +167,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         Fluttertoast.showToast(
-          msg: 'Error updating profile: $e',
+          msg: context.trSafe(
+            'profile_toast_error_updating_profile',
+            args: <String, Object>{'error': e.toString()},
+          ),
           backgroundColor: AppConstants.accentColor,
         );
       }
@@ -183,7 +199,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_isLoading && _currentUser == null) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(context.tr('profile')),
+          title: Text(context.trSafe('profile_title')),
           backgroundColor: AppConstants.primaryColor,
         ),
         body: Center(
@@ -194,7 +210,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          context.tr('profile'),
+          context.trSafe('profile_title'),
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         backgroundColor: AppConstants.primaryColor,
@@ -213,7 +229,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       body: _currentUser == null
-          ? Center(child: Text(context.tr('user_not_found')))
+          ? Center(
+              child: Text(context.trSafe('profile_message_user_not_found')),
+            )
           : SingleChildScrollView(
               child: Column(
                 children: [
@@ -236,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         if (_isEditMode) ...[
                           SizedBox(height: 12),
                           CusomSmallButtom(
-                            text: context.tr('change_photo'),
+                            text: context.trSafe('profile_action_change_photo'),
                             onPressed: _pickImage,
                             icon: Icons.camera_alt,
                             backgroundColor: Colors.white.withOpacity(0.3),
@@ -254,8 +272,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           CustomTextField(
                             controller: _nameController,
-                            labelText: context.tr('name'),
-                            hintText: context.tr('enter_your_name'),
+                            labelText:
+                                context.trSafe('profile_input_name_label'),
+                            hintText:
+                                context.trSafe('profile_input_name_hint'),
                             prefixIcon: Icons.person,
                             readOnly: !_isEditMode,
                             validator: (value) =>
@@ -264,8 +284,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SizedBox(height: 20),
                           CustomTextField(
                             controller: _bioController,
-                            labelText: context.tr('bio'),
-                            hintText: context.tr('tell_us_about_yourself'),
+                            labelText:
+                                context.trSafe('profile_input_bio_label'),
+                            hintText:
+                                context.trSafe('profile_input_bio_hint'),
                             prefixIcon: Icons.info_outline,
                             readOnly: !_isEditMode,
                             maxlines: 3,
@@ -276,8 +298,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: TextEditingController(
                               text: _currentUser!.email,
                             ),
-                            labelText: context.tr('email'),
-                            hintText: context.tr('email'),
+                            labelText:
+                                context.trSafe('profile_input_email_label'),
+                            hintText:
+                                context.trSafe('profile_input_email_hint'),
                             prefixIcon: Icons.email,
                             readOnly: true,
                             enabled: false,
@@ -289,13 +313,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           SizedBox(height: 24),
                           if (_isEditMode) ...[
                             CustomButton(
-                              text: context.tr('save_changes'),
+                              text: context.trSafe('profile_button_save_changes'),
                               onPressed: _updateProfile,
                               isLoading: _isLoading,
                             ),
                             SizedBox(height: 12),
                             CustomButton(
-                              text: context.tr('cancel'),
+                              text: context.trSafe('common_button_cancel'),
                               onPressed: _cancelEdit,
                               isOutlined: true,
                             ),
@@ -352,7 +376,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Text(
           _currentUser!.name.isNotEmpty
               ? _currentUser!.name[0].toLowerCase()
-              : '?',
+                  : context.trSafe('common_unknown_initial'),
           style: TextStyle(
             fontSize: 48,
             fontWeight: FontWeight.bold,
@@ -375,7 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.tr('account_information'),
+            context.trSafe('profile_section_account_information'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -385,13 +409,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: 12),
           _buildInfoRow(
             Icons.calendar_today,
-            context.tr('joined'),
+            context.trSafe('profile_section_joined'),
             _formatDate(_currentUser!.createdAt),
           ),
           Divider(height: 24),
           _buildInfoRow(
             Icons.verified_user,
-            context.tr('user_id'),
+            context.trSafe('profile_section_user_id'),
             _currentUser!.uid.substring(0, 12) + '...',
           ),
         ],
@@ -414,19 +438,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            context.tr('theme'),
+            context.trSafe('profile_settings_theme'),
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(context.tr('dark_mode')),
+            title: Text(context.trSafe('profile_settings_dark_mode')),
             value: themeProvider.isDarkMode,
             onChanged: (_) => themeProvider.toggleTheme(),
           ),
           SizedBox(height: 12),
           Text(
-            context.tr('language'),
+            context.trSafe('profile_settings_language'),
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 8),
@@ -435,9 +459,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             items: [
               DropdownMenuItem(
                 value: 'en',
-                child: Text(context.tr('english')),
+                child: Text(context.trSafe('profile_settings_language_english')),
               ),
-              DropdownMenuItem(value: 'hi', child: Text(context.tr('hindi'))),
+              DropdownMenuItem(
+                value: 'hi',
+                child: Text(context.trSafe('profile_settings_language_hindi')),
+              ),
             ],
             onChanged: (value) {
               if (value != null) {
@@ -455,11 +482,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         Icon(icon, size: 20, color: AppConstants.textSecondaryColor),
         SizedBox(width: 12),
-        Text(
-          '$label:',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppConstants.textSecondaryColor,
+        Flexible(
+          child: Text(
+            '$label:',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppConstants.textSecondaryColor,
+            ),
           ),
         ),
         Expanded(

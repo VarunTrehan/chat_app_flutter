@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 
 class AppConstants {
   //App Info
-  static const String appName = 'Flutter Chat';
   static const String appVersion = '1.0.0';
 
   //ZegoCloud Credentials
@@ -57,20 +57,6 @@ class AppConstants {
   static const int minPasswordLength = 6;
   static const int maxNameLength = 50;
 
-  static const String networkErrorMessage = 'Network error. Please try again.';
-  static const String unknownErrorMessage =
-      'An unknown error occurred. Please try again.';
-  static const String emailInvalidMessage =
-      'Please enter a valid email address.';
-  static const String passwordShortMessage =
-      'Password must be at least $minPasswordLength characters long.';
-  static const String fieldsEmptyMessage = 'Please fill in all fields.';
-
-  static const String loginSuccessMessage = 'Login successful!';
-  static const String signupSuccessMessage =
-      'Signup successful! Please log in.';
-  static const String logoutSuccessMessage = 'Logout successful!';
-
   static const String defaultAvatar =
       'https://ui-avatars.com/api/?background=6C63FF&color=fff&name=';
 
@@ -83,24 +69,38 @@ class AppConstants {
     return '${AppConstants.defaultAvatar}${Uri.encodeComponent(name)}';
   }
 
-  String formatTimestamp(DateTime timestamp) {
+  String formatTimestamp(BuildContext context, DateTime timestamp) {
     final now = DateTime.now();
     final difference = now.difference(timestamp);
 
     if (difference.inDays == 0) {
       if (difference.inHours == 0) {
         if (difference.inMinutes == 0) {
-          return 'Just now';
+          return context.trSafe('time_just_now');
         }
-          return '${difference.inMinutes} min ago';
-        }
-        return '${difference.inHours} hr ago';
-      } else if(difference.inDays == 1){
-        return 'Yesterday';
-      } else if(difference.inDays < 7){
-        return '${difference.inDays} days ago';
-      }else{
-        return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
+        return context.trSafe(
+          'time_minutes_ago',
+          args: <String, Object>{'count': difference.inMinutes},
+        );
       }
+
+      return context.trSafe(
+        'time_hours_ago',
+        args: <String, Object>{'count': difference.inHours},
+      );
     }
+
+    if (difference.inDays == 1) {
+      return context.trSafe('time_yesterday');
+    }
+
+    if (difference.inDays < 7) {
+      return context.trSafe(
+        'time_days_ago',
+        args: <String, Object>{'count': difference.inDays},
+      );
+    }
+
+    return '${timestamp.day}/${timestamp.month}/${timestamp.year}';
   }
+}

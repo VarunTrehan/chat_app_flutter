@@ -65,7 +65,7 @@ class _SignupScreenState extends State<SignupScreen> {
         );
 
         Fluttertoast.showToast(
-          msg: AppConstants.signupSuccessMessage,
+          msg: context.trSafe('auth_toast_signup_success'),
           backgroundColor: AppConstants.secondaryColor,
         );
 
@@ -77,7 +77,15 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       Fluttertoast.showToast(
-        msg: e.toString(),
+        msg: (e is AuthError)
+            ? context.trSafe(
+                'auth_error_${e.code}',
+                args: <String, Object>{'error': e.details ?? e.toString()},
+              )
+            : context.trSafe(
+                'auth_error_unexpected_error',
+                args: <String, Object>{'error': e.toString()},
+              ),
         backgroundColor: AppConstants.accentColor,
         toastLength: Toast.LENGTH_LONG,
       );
@@ -133,20 +141,26 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     SizedBox(height: 24),
                     Text(
-                      context.tr('create_account'),
+                      context.trSafe('signup_title_create_account'),
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      maxLines: 2,
                     ),
                     SizedBox(height: 8),
                     Text(
-                      context.tr('sign_up_to_get_started'),
+                      context.trSafe('signup_subtitle_sign_up_to_get_started'),
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
                       ),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                      maxLines: 3,
                     ),
                     SizedBox(height: 40),
                     Container(
@@ -168,7 +182,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         children: [
                           CustomTextField(
                             controller: _nameController,
-                            hintText: context.tr('name'),
+                            hintText: context.trSafe('signup_input_name_hint'),
                             prefixIcon: Icons.person_outline,
                             textCapitalization: TextCapitalization.words,
                             validator: (value) =>
@@ -177,7 +191,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _emailController,
-                            hintText: context.tr('email'),
+                            hintText: context.trSafe('signup_input_email_hint'),
                             prefixIcon: Icons.email_outlined,
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) =>
@@ -186,7 +200,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _passwordController,
-                            hintText: context.tr('password'),
+                            hintText: context.trSafe('signup_input_password_hint'),
                             prefixIcon: Icons.lock_outlined,
                             isPassword: true,
                             validator: (value) =>
@@ -195,7 +209,9 @@ class _SignupScreenState extends State<SignupScreen> {
                           SizedBox(height: 16),
                           CustomTextField(
                             controller: _confirmpasswordController,
-                            hintText: context.tr('confirm_password'),
+                            hintText: context.trSafe(
+                              'signup_input_confirm_password_hint',
+                            ),
                             prefixIcon: Icons.lock_outlined,
                             isPassword: true,
                             validator: (value) =>
@@ -207,7 +223,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           ),
                           SizedBox(height: 24),
                           CustomButton(
-                            text: context.tr('sign_up'),
+                            text: context.trSafe('signup_button_submit'),
                             onPressed: _signUp,
                             isLoading: _isLoading,
                           ),
@@ -215,14 +231,18 @@ class _SignupScreenState extends State<SignupScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                context.tr('already_have_account'),
-                                style: TextStyle(
-                                  color: AppConstants.textSecondaryColor,
+                              Flexible(
+                                child: Text(
+                                  context.trSafe('signup_text_already_have_account'),
+                                  style: TextStyle(
+                                    color: AppConstants.textSecondaryColor,
+                                  ),
+                                  softWrap: true,
+                                  maxLines: 2,
                                 ),
                               ),
                               CustomTextButton(
-                                text: context.tr('log_in'),
+                                text: context.trSafe('signup_link_log_in'),
                                 onPressed: _navigateToLogin,
                               ),
                             ],
@@ -236,12 +256,14 @@ class _SignupScreenState extends State<SignupScreen> {
                         horizontal: AppConstants.paddingMedium,
                       ),
                       child: Text(
-                        context.tr('terms_and_privacy'),
+                        context.trSafe('signup_text_terms_and_privacy'),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.white.withOpacity(0.8),
                         ),
                         textAlign: TextAlign.center,
+                        softWrap: true,
+                        maxLines: 3,
                       ),
                     ),
                   ],

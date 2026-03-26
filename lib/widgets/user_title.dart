@@ -39,7 +39,7 @@ class UserTitle extends StatelessWidget {
           horizontal: AppConstants.paddingMedium,
           vertical: AppConstants.paddingSmall,
         ),
-        leading: _buildAvatar(),
+        leading: _buildAvatar(context),
         title: Text(
           user.name,
           style: TextStyle(
@@ -59,7 +59,7 @@ class UserTitle extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(BuildContext context) {
     return Stack(
       children: [
         CircleAvatar(
@@ -70,7 +70,9 @@ class UserTitle extends StatelessWidget {
               : null,
           child: user.photoUrl == null
               ? Text(
-                  user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
+                  user.name.isNotEmpty
+                      ? user.name[0].toUpperCase()
+                      : context.trSafe('common_unknown_initial'),
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -109,14 +111,14 @@ class UserTitle extends StatelessWidget {
 
     if (showLastSeen && !user.isOnline && user.lastSeen != null) {
       return Text(
-        '${context.tr('last_seen')}: ${AppConstants().formatTimestamp(user.lastSeen!)}',
+        '${context.trSafe('user_status_last_seen')}: ${AppConstants().formatTimestamp(context, user.lastSeen!)}',
         style: TextStyle(fontSize: 12, color: AppConstants.textSecondaryColor),
       );
     }
 
     if (user.isOnline) {
       return Text(
-        context.tr('online'),
+        context.trSafe('user_status_online'),
         style: TextStyle(
           color: Colors.green,
           fontSize: 12,
@@ -156,7 +158,7 @@ class EmptyUserList extends StatelessWidget {
           ),
           SizedBox(height: 16),
           Text(
-            message.isNotEmpty ? message : context.tr('no_users_found'),
+            message.isNotEmpty ? message : context.trSafe('home_empty_users_found'),
             style: TextStyle(
               fontSize: 16,
               color: AppConstants.textSecondaryColor.withOpacity(0.7),

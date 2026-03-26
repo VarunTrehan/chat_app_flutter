@@ -6,6 +6,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
 
+class AuthError implements Exception {
+  final String code;
+  final String? details;
+
+  const AuthError(this.code, [this.details]);
+
+  @override
+  String toString() => details ?? code;
+}
+
 class AuthServices {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -45,9 +55,9 @@ class AuthServices {
       }
       return null;
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw AuthError(_mapAuthErrorCode(e.code), e.message);
     } catch (e) {
-      throw 'An unexpected error occured $e';
+      throw AuthError('unexpected_error', e.toString());
     }
   }
 
@@ -85,9 +95,9 @@ class AuthServices {
 
       return null;
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw AuthError(_mapAuthErrorCode(e.code), e.message);
     } catch (e) {
-      throw 'Signup error: $e';
+      throw AuthError('unexpected_error', e.toString());
     }
   }
 
@@ -101,7 +111,7 @@ class AuthServices {
 
       await _auth.signOut();
     } catch (e) {
-      throw 'Error Signing Out: $e';
+      throw AuthError('sign_out_failed', e.toString());
     }
   }
 
@@ -117,7 +127,7 @@ class AuthServices {
       }
       return null;
     } catch (e) {
-      throw 'Error getting user data: $e';
+      throw AuthError('user_data_fetch_failed', e.toString());
     }
   }
 
@@ -134,7 +144,9 @@ class AuthServices {
     String? bio,
   }) async {
     try {
-      if (currentUserId == null) throw 'No user logged in';
+      if (currentUserId == null) {
+        throw const AuthError('not_logged_in');
+      }
       Map<String, dynamic> updates = {};
       if (name != null) updates['name'] = name;
       if (photoUrl != null) updates['photoUrl'] = photoUrl;
@@ -151,7 +163,7 @@ class AuthServices {
         }
       }
     } catch (e) {
-      throw 'Error updating profile: $e';
+      throw AuthError('profile_update_failed', e.toString());
     }
   }
 
@@ -194,7 +206,7 @@ class AuthServices {
           .where((user) => user.uid != currentUserId)
           .toList();
     } catch (e) {
-      throw 'Error search users: $e';
+      throw AuthError('search_users_failed', e.toString());
     }
   }
 
@@ -202,15 +214,17 @@ class AuthServices {
     try {
       await _auth.sendPasswordResetEmail(email: email.trim());
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthException(e);
+      throw AuthError(_mapAuthErrorCode(e.code), e.message);
     } catch (e) {
-      throw 'Error sending reset email: $e';
+      throw AuthError('unexpected_error', e.toString());
     }
   }
 
   Future<void> deleteAccount() async {
     try {
-      if (currentUserId == null) throw 'No User logged in';
+      if (currentUserId == null) {
+        throw const AuthError('not_logged_in');
+      }
 
       await _firestore
           .collection(AppConstants.usersCollection)
@@ -219,32 +233,33 @@ class AuthServices {
 
       await currentUser?.delete();
     } catch (e) {
-      throw 'Error deleting account: $e';
+      throw AuthError('account_delete_failed', e.toString());
     }
   }
 
-  String _handleAuthException(FirebaseAuthException e) {
-    switch (e.code) {
+  String _mapAuthErrorCode(String? firebaseCode) {
+    switch (firebaseCode) {
       case 'weak-password':
-        return 'The password provided is too weak';
+        return 'weak_password';
       case 'email-already-in-use':
-        return 'An account already exists for this email.';
+        return 'email_already_in_use';
       case 'invalid-email':
-        return 'The email address is not valid';
+        return 'invalid_email';
       case 'user-disabled':
-        return 'This user account has been disbaled';
+        return 'user_disabled';
       case 'user-not-found':
-        return 'No user found with this email.';
+        return 'user_not_found';
       case 'wrong-password':
-        return 'Wrong password provided.';
+        return 'wrong_password';
       case 'too-many-request':
-        return 'Too many attempts. Please try again later.';
+        return 'too_many_attempts';
       case 'operation-not-allowed':
-        return 'This operation is not allowed';
+        return 'operation_not_allowed';
+      case 'network-request-failed':
       case 'network-reqest-failed':
-        return AppConstants.networkErrorMessage;
+        return 'network_request_failed';
       default:
-        return 'Authentication error: ${e.message}';
+        return 'unknown_error';
     }
   }
 }
