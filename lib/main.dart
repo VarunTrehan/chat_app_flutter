@@ -1,7 +1,9 @@
+import 'package:chat_app_flutter/core/controllers/update_checker.dart';
 import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 import 'package:chat_app_flutter/core/providers/offline_data_provider.dart';
 import 'package:chat_app_flutter/core/services/cache_service.dart';
 import 'package:chat_app_flutter/core/services/network_service.dart';
+import 'package:chat_app_flutter/core/services/remote_config_service.dart';
 import 'package:chat_app_flutter/core/localization/language_constants.dart';
 import 'package:chat_app_flutter/core/providers/language_provider.dart';
 import 'package:chat_app_flutter/core/providers/theme_provider.dart';
@@ -24,6 +26,9 @@ import 'package:zego_zimkit/zego_zimkit.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  final remoteConfigService = RemoteConfigService();
+  await remoteConfigService.initializeRemoteConfig();
 
   await Hive.initFlutter();
   final cacheService = await CacheService.init();
@@ -78,15 +83,23 @@ void main() async {
           value: offlineDataProvider,
         ),
       ],
-      child: MyApp(navigatorKey: navigatorKey),
+      child: MyApp(
+        navigatorKey: navigatorKey,
+        remoteConfigService: remoteConfigService,
+      ),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
+  final RemoteConfigService remoteConfigService;
 
-  const MyApp({super.key, required this.navigatorKey});
+  const MyApp({
+    super.key,
+    required this.navigatorKey,
+    required this.remoteConfigService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -110,7 +123,10 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: LanguageConstants.supportedLocales,
-      home: SplashScreen(),
+      home: UpdateAppStartup(
+        remoteConfig: remoteConfigService,
+        child: SplashScreen(),
+      ),
     );
   }
 }
