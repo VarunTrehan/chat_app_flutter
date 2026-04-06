@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Simple offline cache abstraction backed by Hive.
 ///
 /// - Stores JSON-serialized data in a string box.
-/// - Tracks cache availability with SharedPreferences for quick checks.
+/// - Tracks cache availability with SharedPreferences for quick checks (non-secret flags only; use secure storage for tokens).
 class CacheService {
   static const String _availabilityPrefix = 'cache_available_';
 

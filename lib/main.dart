@@ -1,6 +1,10 @@
 import 'package:chat_app_flutter/core/controllers/update_checker.dart';
 import 'package:chat_app_flutter/core/localization/app_localizations.dart';
 import 'package:chat_app_flutter/core/providers/offline_data_provider.dart';
+import 'package:chat_app_flutter/core/providers/security_flags_provider.dart';
+import 'package:chat_app_flutter/core/security/security_blocked_screen.dart';
+import 'package:chat_app_flutter/core/security/security_bootstrap_shell.dart';
+import 'package:chat_app_flutter/core/security/security_initializer.dart';
 import 'package:chat_app_flutter/core/services/cache_service.dart';
 import 'package:chat_app_flutter/core/services/network_service.dart';
 import 'package:chat_app_flutter/core/services/remote_config_service.dart';
@@ -25,10 +29,28 @@ import 'package:zego_zimkit/zego_zimkit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  SecurityInitializer.initializeSslPinning();
+
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   final remoteConfigService = RemoteConfigService();
   await remoteConfigService.initializeRemoteConfig();
+
+  await SecurityInitializer.initializeSecureStorage();
+  final securityOutcome = await SecurityInitializer.evaluateDeviceSecurity();
+
+  if (securityOutcome.blocked) {
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: SecurityBlockedScreen(
+          message: securityOutcome.blockMessage ?? 'Security check failed.',
+        ),
+      ),
+    );
+    return;
+  }
 
   await Hive.initFlutter();
   final cacheService = await CacheService.init();
@@ -69,6 +91,9 @@ void main() async {
 
   final themeProvider = ThemeProvider();
   final languageProvider = LanguageProvider();
+  final securityFlags = SecurityFlags(
+    sensitiveFeaturesInitiallyDisabled: securityOutcome.emulatorSuspicious,
+  );
   await Future.wait([
     themeProvider.loadSavedTheme(),
     languageProvider.loadSavedLanguage(),
@@ -82,10 +107,12 @@ void main() async {
         ChangeNotifierProvider<OfflineDataProvider>.value(
           value: offlineDataProvider,
         ),
+        ChangeNotifierProvider<SecurityFlags>.value(value: securityFlags),
       ],
       child: MyApp(
         navigatorKey: navigatorKey,
         remoteConfigService: remoteConfigService,
+        emulatorSuspicious: securityOutcome.emulatorSuspicious,
       ),
     ),
   );
@@ -94,11 +121,13 @@ void main() async {
 class MyApp extends StatelessWidget {
   final GlobalKey<NavigatorState> navigatorKey;
   final RemoteConfigService remoteConfigService;
+  final bool emulatorSuspicious;
 
   const MyApp({
     super.key,
     required this.navigatorKey,
     required this.remoteConfigService,
+    required this.emulatorSuspicious,
   });
 
   @override
@@ -123,9 +152,12 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: LanguageConstants.supportedLocales,
-      home: UpdateAppStartup(
-        remoteConfig: remoteConfigService,
-        child: SplashScreen(),
+      home: SecurityBootstrapShell(
+        showEmulatorWarning: emulatorSuspicious,
+        child: UpdateAppStartup(
+          remoteConfig: remoteConfigService,
+          child: SplashScreen(),
+        ),
       ),
     );
   }

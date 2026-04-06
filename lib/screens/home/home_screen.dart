@@ -6,7 +6,6 @@ import 'package:chat_app_flutter/services/auth_services.dart';
 import 'package:chat_app_flutter/utils/constants.dart';
 import 'package:chat_app_flutter/widgets/custom_text_field.dart';
 import 'package:chat_app_flutter/widgets/user_title.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +15,7 @@ import 'package:zego_uikit_signaling_plugin/zego_uikit_signaling_plugin.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
 
 import 'package:chat_app_flutter/core/providers/offline_data_provider.dart';
+import 'package:chat_app_flutter/core/providers/security_flags_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -213,30 +213,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   return UserTitle(
                     user: user,
                     onTap: () => _openChatWithUser(user),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ZegoSendCallInvitationButton(
-                          invitees: [
-                            ZegoUIKitUser(id: user.uid, name: user.name),
-                          ],
-                          isVideoCall: false,
-                          iconSize: Size(40, 40),
-                          buttonSize: Size(50, 50),
-                          onPressed: onSendCallInvitationFinished,
-                        ),
-                        SizedBox(width: 8),
-                        ZegoSendCallInvitationButton(
-                          invitees: [
-                            ZegoUIKitUser(id: user.uid, name: user.name),
-                          ],
-                          isVideoCall: true,
-                          iconSize: Size(40, 40),
-                          buttonSize: Size(50, 50),
-                          onPressed: onSendCallInvitationFinished,
-                        ),
-                      ],
-                    ),
+                    trailing: _buildCallInvitationButtons(user),
                   );
                 },
               );
@@ -258,27 +235,100 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               builder: (context) => ZIMKitMessageListPage(
                 conversationID: user.uid,
                 conversationType: ZIMConversationType.peer,
-                appBarActions: [
-                  ZegoSendCallInvitationButton(
-                    invitees: [ZegoUIKitUser(id: user.uid, name: user.name)],
-                    isVideoCall: false,
-                    iconSize: Size(40, 40),
-                    buttonSize: Size(50, 50),
-                    onPressed: onSendCallInvitationFinished,
-                  ),
-                  SizedBox(width: 8),
-                  ZegoSendCallInvitationButton(
-                    invitees: [ZegoUIKitUser(id: user.uid, name: user.name)],
-                    isVideoCall: true,
-                    iconSize: Size(40, 40),
-                    buttonSize: Size(50, 50),
-                    onPressed: onSendCallInvitationFinished,
-                  ),
-                ],
+                appBarActions: _callInvitationAppBarActions(user),
               ),
             ),
           );
         });
+  }
+
+  Widget _buildCallInvitationButtons(UserModel user) {
+    return Consumer<SecurityFlags>(
+      builder: (context, flags, _) {
+        if (!flags.sensitiveFeaturesEnabled) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tooltip(
+                message:
+                    'Voice and video calls are disabled on this device for security.',
+                child: Icon(
+                  Icons.phone_disabled,
+                  color: Colors.grey.shade600,
+                  size: 28,
+                ),
+              ),
+            ],
+          );
+        }
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ZegoSendCallInvitationButton(
+              invitees: [
+                ZegoUIKitUser(id: user.uid, name: user.name),
+              ],
+              isVideoCall: false,
+              iconSize: Size(40, 40),
+              buttonSize: Size(50, 50),
+              onPressed: onSendCallInvitationFinished,
+            ),
+            SizedBox(width: 8),
+            ZegoSendCallInvitationButton(
+              invitees: [
+                ZegoUIKitUser(id: user.uid, name: user.name),
+              ],
+              isVideoCall: true,
+              iconSize: Size(40, 40),
+              buttonSize: Size(50, 50),
+              onPressed: onSendCallInvitationFinished,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  List<Widget> _callInvitationAppBarActions(UserModel user) {
+    return [
+      Consumer<SecurityFlags>(
+        builder: (context, flags, _) {
+          if (!flags.sensitiveFeaturesEnabled) {
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip:
+                      'Voice and video calls are disabled on this device for security.',
+                  onPressed: null,
+                  icon: Icon(Icons.phone_disabled, color: Colors.grey.shade600),
+                ),
+              ],
+            );
+          }
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ZegoSendCallInvitationButton(
+                invitees: [ZegoUIKitUser(id: user.uid, name: user.name)],
+                isVideoCall: false,
+                iconSize: Size(40, 40),
+                buttonSize: Size(50, 50),
+                onPressed: onSendCallInvitationFinished,
+              ),
+              SizedBox(width: 8),
+              ZegoSendCallInvitationButton(
+                invitees: [ZegoUIKitUser(id: user.uid, name: user.name)],
+                isVideoCall: true,
+                iconSize: Size(40, 40),
+                buttonSize: Size(50, 50),
+                onPressed: onSendCallInvitationFinished,
+              ),
+            ],
+          );
+        },
+      ),
+    ];
   }
 
   void onSendCallInvitationFinished(
@@ -361,12 +411,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         barrierDismissible: false,
       );
 
-      await ZIMKit().disconnectUser();
-      await FirebaseAuth.instance.signOut();
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      await _authServices.signOut();
+      if (context.mounted) {
+        Navigator.pop(context);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
     } catch (e) {
       Navigator.pop(context);
       Fluttertoast.showToast(

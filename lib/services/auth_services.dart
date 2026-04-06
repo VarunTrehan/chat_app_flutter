@@ -1,8 +1,8 @@
+import 'package:chat_app_flutter/core/security/secure_storage_service.dart';
 import 'package:chat_app_flutter/models/user_model.dart';
 import 'package:chat_app_flutter/utils/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:zego_uikit_prebuilt_call/zego_uikit_prebuilt_call.dart';
 import 'package:zego_zimkit/zego_zimkit.dart';
 
@@ -42,6 +42,7 @@ class AuthServices {
       User? user = userCredential.user;
 
       if (user != null) {
+        await SecureStorageService.instance.cacheAuthFromFirebaseUser(user);
         await updateUserOnlineStatus(user.uid, true);
 
         DocumentSnapshot userDoc = await _firestore
@@ -73,6 +74,7 @@ class AuthServices {
       User? user = userCredential.user;
 
       if (user != null) {
+        await SecureStorageService.instance.cacheAuthFromFirebaseUser(user);
         await user.updateDisplayName(name);
 
         UserModel userModel = UserModel(
@@ -108,6 +110,7 @@ class AuthServices {
       }
       await ZegoUIKitPrebuiltCallInvitationService().uninit();
       await ZIMKit().disconnectUser();
+      await SecureStorageService.instance.clearAll();
 
       await _auth.signOut();
     } catch (e) {
